@@ -223,38 +223,42 @@
         new Notification('Session Timer', { body: 'Your time is up!' });
       }
 
-      const beepTimes = [0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400]; // ms
-      const beepDuration = 250; // ms
-      const totalDuration = beepTimes[beepTimes.length - 1] + beepDuration;
+      const pulses = [0, 1500, 3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500];
+      const fadeDuration = 600; // ms each way
+      const totalDuration = pulses[pulses.length - 1] + fadeDuration * 2;
 
       document.getElementById('ring-svg').style.visibility = 'hidden';
-      setTimeout(() => {
-        document.getElementById('ring-svg').style.visibility = 'visible';
-      }, totalDuration);
+      document.body.style.transition = `background-color ${fadeDuration}ms ease-in-out`;
 
-      // Flash background in sync with each beep
-      beepTimes.forEach(t => {
+      pulses.forEach(t => {
         setTimeout(() => {
           document.body.style.backgroundColor = '#e09f9f';
           setTimeout(() => {
-            document.body.style.backgroundColor = '#cf9393';
-          }, beepDuration);
+            document.body.style.backgroundColor = '#c49d74';
+          }, fadeDuration);
         }, t);
       });
 
-      // Play beeps
+      setTimeout(() => {
+        document.body.style.transition = '';
+        document.getElementById('ring-svg').style.visibility = 'visible';
+      }, totalDuration);
+
+      // Soft tone
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        beepTimes.forEach(t => {
+        pulses.forEach(t => {
           const o = ctx.createOscillator();
           const g = ctx.createGain();
           o.connect(g); g.connect(ctx.destination);
-          o.frequency.value = 880;
+          o.frequency.value = 440;
+          o.type = 'sine';
           const ts = ctx.currentTime + t / 1000;
-          g.gain.setValueAtTime(0.3, ts);
-          g.gain.exponentialRampToValueAtTime(0.001, ts + 0.25);
+          g.gain.setValueAtTime(0, ts);
+          g.gain.linearRampToValueAtTime(0.2, ts + fadeDuration / 1000);
+          g.gain.linearRampToValueAtTime(0, ts + (fadeDuration * 2) / 1000);
           o.start(ts);
-          o.stop(ts + 0.25);
+          o.stop(ts + (fadeDuration * 2) / 1000);
         });
       } catch(e) {}
     }
