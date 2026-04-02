@@ -5,38 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Session Timer</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Nunito', Candara, 'Segoe UI', sans-serif;
       background: #0f0f1a;
       color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 4rem;
       min-height: 100vh;
     }
 
-.progress-ring {
-      margin: 2rem auto;
+    .progress-ring {
+      width: min(95vw, 95vh);
+      height: min(95vw, 95vh);
     }
 
     .progress-ring svg {
+      width: 100%;
+      height: 100%;
       transform: rotate(-90deg);
     }
 
     .controls {
       display: flex;
       gap: 1rem;
-      margin-top: 2rem;
     }
 
     button {
-      padding: 0.7rem 2rem;
+      padding: 1vmin 2.5vmin;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: clamp(0.8rem, 2.2vmin, 1.2rem);
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.2s, transform 0.1s;
@@ -51,15 +56,14 @@
 
     .preset-row {
       display: flex;
-      gap: 0.6rem;
-      margin-top: 2rem;
+      gap: 0.7rem;
       flex-wrap: wrap;
       justify-content: center;
     }
 
     .preset-row button {
-      padding: 0.4rem 1.1rem;
-      font-size: 0.85rem;
+      padding: 0.8vmin 2vmin;
+      font-size: clamp(0.75rem, 2vmin, 1.1rem);
       background: #48524a;
       color: #d1d5db;
       border-radius: 20px;
@@ -72,8 +76,16 @@
 </head>
 <body>
 
-<div class="progress-ring" style="position:relative;width:260px;height:260px;">
-    <svg id="ring-svg" width="260" height="260" viewBox="0 0 260 260">
+  <div class="preset-row" id="preset-row">
+    <button onclick="setPreset(10, this)">10 sec</button>
+    <button onclick="setPreset(15*60, this)">15 min</button>
+    <button onclick="setPreset(25*60, this)">25 min</button>
+    <button id="btn-50" onclick="setPreset(50*60, this)">50 min</button>
+    <button onclick="setPreset(60*60, this)">60 min</button>
+  </div>
+
+  <div class="progress-ring" style="position:relative;width:260px;height:260px;">
+    <svg id="ring-svg" viewBox="0 0 260 260">
       <circle id="ring-track" cx="130" cy="130" r="120" fill="none" stroke="#87c474" stroke-width="12"/>
       <circle id="ring" cx="130" cy="130" r="120" fill="none"
               stroke="#6ee7b7" stroke-width="12"
@@ -81,8 +93,8 @@
               stroke-dashoffset="0"
               stroke-linecap="round"/>
     </svg>
-    <svg id="pause-symbol" width="260" height="260" viewBox="0 0 260 260"
-         style="position:absolute;top:0;left:0;display:none;">
+    <svg id="pause-symbol" viewBox="0 0 260 260"
+         style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;">
       <rect x="80" y="80" width="100" height="100" rx="10" fill="#c47e7e"/>
     </svg>
   </div>
@@ -91,14 +103,6 @@
     <button id="btn-start">Start</button>
     <button id="btn-pause" disabled>Pause</button>
     <button id="btn-reset">Reset</button>
-  </div>
-
-  <div class="preset-row" id="preset-row">
-    <button onclick="setPreset(10, this)">10 sec</button>
-    <button onclick="setPreset(15*60, this)">15 min</button>
-    <button onclick="setPreset(25*60, this)">25 min</button>
-    <button onclick="setPreset(50*60, this)">50 min</button>
-    <button onclick="setPreset(60*60, this)">60 min</button>
   </div>
 
 
@@ -125,7 +129,7 @@
       presetRow.style.visibility = hide;
     }
 
-    const BG_STOPS = ['#87c474', '#c0c474', '#c49d74'];
+    const BG_STOPS = ['#87c474', '#c0c474', '#c49074'];
 
     function darken(rgb, amount) {
       const m = rgb.match(/\d+/g).map(Number);
@@ -230,6 +234,29 @@
       document.getElementById('ring-svg').style.display = 'none';
       document.getElementById('pause-symbol').style.display = 'block';
       document.body.style.backgroundColor = '#e09f9f';
+
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        // Pentatonic wind chime notes (G5, A5, B5, D6, E6, G6)
+        const notes = [784, 880, 988, 1175, 1319, 1568];
+        const strikes = [0, 0.3, 0.55, 0.9, 1.2, 1.6, 2.1, 2.5];
+        strikes.forEach((t, i) => {
+          const freq = notes[Math.floor(i * notes.length / strikes.length)];
+          // Fundamental + inharmonic partial (metal tube character)
+          [[freq, 0.15], [freq * 2.756, 0.05]].forEach(([f, vol]) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.type = 'sine';
+            o.frequency.value = f;
+            const ts = ctx.currentTime + t;
+            g.gain.setValueAtTime(vol, ts);
+            g.gain.exponentialRampToValueAtTime(0.0001, ts + 2.5);
+            o.start(ts);
+            o.stop(ts + 2.5);
+          });
+        });
+      } catch(e) {}
     }
 
     btnStart.addEventListener('click', start);
@@ -241,8 +268,10 @@
       Notification.requestPermission();
     }
 
-    // Init display
-    updateUI();
+    // Default to 50 min
+    const defaultBtn = document.getElementById('btn-50');
+    defaultBtn.classList.add('active');
+    setTime(50 * 60);
   </script>
 </body>
 </html>
