@@ -72,7 +72,7 @@
 </head>
 <body>
 
-<div class="progress-ring">
+<div class="progress-ring" style="position:relative;width:260px;height:260px;">
     <svg id="ring-svg" width="260" height="260" viewBox="0 0 260 260">
       <circle id="ring-track" cx="130" cy="130" r="120" fill="none" stroke="#87c474" stroke-width="12"/>
       <circle id="ring" cx="130" cy="130" r="120" fill="none"
@@ -80,6 +80,10 @@
               stroke-dasharray="753.98"
               stroke-dashoffset="0"
               stroke-linecap="round"/>
+    </svg>
+    <svg id="pause-symbol" width="260" height="260" viewBox="0 0 260 260"
+         style="position:absolute;top:0;left:0;display:none;">
+      <rect x="80" y="80" width="100" height="100" rx="10" fill="#c47e7e"/>
     </svg>
   </div>
 
@@ -214,7 +218,8 @@
     function reset() {
       stop();
       remaining = totalSeconds;
-
+      document.getElementById('ring-svg').style.display = 'block';
+      document.getElementById('pause-symbol').style.display = 'none';
       updateUI();
     }
 
@@ -222,45 +227,9 @@
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('Session Timer', { body: 'Your time is up!' });
       }
-
-      const pulses = [0, 1500, 3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500];
-      const fadeDuration = 600; // ms each way
-      const totalDuration = pulses[pulses.length - 1] + fadeDuration * 2;
-
-      document.getElementById('ring-svg').style.visibility = 'hidden';
-      document.body.style.transition = `background-color ${fadeDuration}ms ease-in-out`;
-
-      pulses.forEach(t => {
-        setTimeout(() => {
-          document.body.style.backgroundColor = '#e09f9f';
-          setTimeout(() => {
-            document.body.style.backgroundColor = '#c49d74';
-          }, fadeDuration);
-        }, t);
-      });
-
-      setTimeout(() => {
-        document.body.style.transition = '';
-        document.getElementById('ring-svg').style.visibility = 'visible';
-      }, totalDuration);
-
-      // Soft tone
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        pulses.forEach(t => {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.connect(g); g.connect(ctx.destination);
-          o.frequency.value = 440;
-          o.type = 'sine';
-          const ts = ctx.currentTime + t / 1000;
-          g.gain.setValueAtTime(0, ts);
-          g.gain.linearRampToValueAtTime(0.2, ts + fadeDuration / 1000);
-          g.gain.linearRampToValueAtTime(0, ts + (fadeDuration * 2) / 1000);
-          o.start(ts);
-          o.stop(ts + (fadeDuration * 2) / 1000);
-        });
-      } catch(e) {}
+      document.getElementById('ring-svg').style.display = 'none';
+      document.getElementById('pause-symbol').style.display = 'block';
+      document.body.style.backgroundColor = '#e09f9f';
     }
 
     btnStart.addEventListener('click', start);
