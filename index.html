@@ -45,9 +45,9 @@
     button:active { transform: scale(0.96); }
     button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    #btn-start  { background: #6ee7b7; color: #0f0f1a; }
-    #btn-pause  { background: #f59e0b; color: #0f0f1a; }
-    #btn-reset  { background: #374151; color: #fff; }
+    #btn-start  { background: #69a656; color: #fff; }
+    #btn-pause  { background: #48524a; color: #fff; }
+    #btn-reset  { background: #48524a; color: #fff; }
 
     .preset-row {
       display: flex;
@@ -60,13 +60,13 @@
     .preset-row button {
       padding: 0.4rem 1.1rem;
       font-size: 0.85rem;
-      background: #1f2937;
+      background: #48524a;
       color: #d1d5db;
       border-radius: 20px;
     }
 
-    .preset-row button:hover { background: #374151; }
-    .preset-row button.active { background: #6ee7b7; color: #0f0f1a; }
+    .preset-row button:hover { background: #578a48; }
+    .preset-row button.active { background: #578a48; color: #fff; }
 
 </style>
 </head>
@@ -91,14 +91,10 @@
 
   <div class="preset-row" id="preset-row">
     <button onclick="setPreset(10, this)">10 sec</button>
-    <button onclick="setPreset(5*60, this)">5 min</button>
-    <button onclick="setPreset(10*60, this)">10 min</button>
     <button onclick="setPreset(15*60, this)">15 min</button>
     <button onclick="setPreset(25*60, this)">25 min</button>
-    <button onclick="setPreset(45*60, this)">45 min</button>
-    <button onclick="setPreset(60*60, this)">1 hr</button>
-    <button onclick="setPreset(90*60, this)">1.5 hr</button>
-    <button onclick="setPreset(2*60*60, this)">2 hr</button>
+    <button onclick="setPreset(50*60, this)">50 min</button>
+    <button onclick="setPreset(60*60, this)">60 min</button>
   </div>
 
 
@@ -229,13 +225,19 @@
 
       const beepTimes = [0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400]; // ms
       const beepDuration = 250; // ms
+      const totalDuration = beepTimes[beepTimes.length - 1] + beepDuration;
+
+      document.getElementById('ring-svg').style.visibility = 'hidden';
+      setTimeout(() => {
+        document.getElementById('ring-svg').style.visibility = 'visible';
+      }, totalDuration);
 
       // Flash background in sync with each beep
       beepTimes.forEach(t => {
         setTimeout(() => {
-          document.body.style.backgroundColor = '#d47979';
+          document.body.style.backgroundColor = '#e09f9f';
           setTimeout(() => {
-            document.body.style.backgroundColor = '#c49d74';
+            document.body.style.backgroundColor = '#cf9393';
           }, beepDuration);
         }, t);
       });
