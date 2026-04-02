@@ -11,7 +11,7 @@
 
     body {
       font-family: 'Nunito', Candara, 'Segoe UI', sans-serif;
-      background: #0f0f1a;
+      background: #87c474;
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -98,9 +98,51 @@
     .preset-row button:hover { background: #578a48; }
     .preset-row button.active { background: #578a48; color: #fff; }
 
+    #btn-fullscreen {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      opacity: 0.3;
+      padding: 0;
+      width: 42px;
+      height: 42px;
+      transition: opacity 0.2s;
+    }
+
+    #btn-fullscreen:hover { opacity: 0.7; }
+
+    #ad-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 90px;
+      background: rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.25);
+    }
+
 </style>
 </head>
 <body>
+
+<button id="btn-fullscreen" title="Toggle fullscreen">
+  <svg id="icon-expand" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+    <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+  </svg>
+  <svg id="icon-compress" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+    <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
+    <line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>
+  </svg>
+</button>
 
   <!-- WATERMARK: replace the svg below with <img id="watermark" src="your-logo.png" /> to use a custom image -->
 <div id="watermark-container">
@@ -162,6 +204,8 @@
       btnStart.style.visibility  = hide;
       btnReset.style.visibility  = hide;
       presetRow.style.visibility = hide;
+      const ad = document.getElementById('ad-banner');
+      if (ad) ad.style.display = isRunning ? 'none' : 'flex';
     }
 
     const BG_STOPS = ['#87c474', '#c0c474', '#c49074'];
@@ -295,6 +339,20 @@
     }
 
     btnStart.addEventListener('click', start);
+
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      const fs = !!document.fullscreenElement;
+      document.getElementById('icon-expand').style.display   = fs ? 'none'  : 'block';
+      document.getElementById('icon-compress').style.display = fs ? 'block' : 'none';
+    });
     btnPause.addEventListener('click', pause);
     btnReset.addEventListener('click', reset);
 
@@ -308,5 +366,8 @@
     defaultBtn.classList.add('active');
     setTime(50 * 60);
   </script>
+<!-- AD PLACEMENT: replace content below with your ad code -->
+<div id="ad-banner">Advertisement</div>
+
 </body>
 </html>
