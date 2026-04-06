@@ -76,7 +76,7 @@
     }
 
     #btn-start  { background: #69a656; color: #fff; }
-    #btn-pause  { background: #48524a; color: #fff; opacity: 0.2 ;}
+    #btn-pause  { background: #48524a; color: #fff; opacity: 0.5 ;}
     #btn-reset  { background: #48524a; color: #fff; }
 
     .preset-row {
@@ -154,11 +154,15 @@
 </div>
 
 <div class="preset-row" id="preset-row">
-    <button onclick="setPreset(10, this)">10 sec</button>
+    <button onclick="setPreset(10*60, this)">10 min</button>
     <button onclick="setPreset(15*60, this)">15 min</button>
-    <button onclick="setPreset(25*60, this)">25 min</button>
+    <button onclick="setPreset(30*60, this)">30 min</button>
     <button id="btn-50" onclick="setPreset(50*60, this)">50 min</button>
-    <button onclick="setPreset(60*60, this)">60 min</button>
+    <button id="btn-custom" onclick="toggleCustom(this)">Custom</button>
+  </div>
+  <div id="custom-row" style="display:none; align-items:center; gap:0.6rem;">
+    <input id="custom-input" type="number" min="1" placeholder="minutes"
+           style="width:90px; padding:0.5rem; border-radius:8px; border:none; background:#48524a; color:#fff; font-family:inherit; font-size:1rem; text-align:center;" />
   </div>
 
   <div class="progress-ring" style="position:relative;width:260px;height:260px;">
@@ -170,6 +174,8 @@
               stroke-dashoffset="0"
               stroke-linecap="round"/>
     </svg>
+    <div id="ring-timer" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.3);font-family:'Nunito',Candara,'Segoe UI',sans-serif;font-size:clamp(1rem,5vmin,2rem);font-weight:600;letter-spacing:0.05em;pointer-events:none;">50:00</div>
+
     <svg id="pause-symbol" viewBox="0 0 260 260"
          style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;">
       <rect x="80" y="80" width="100" height="100" rx="10" fill="#c47e7e"/>
@@ -204,6 +210,7 @@
       btnStart.style.visibility  = hide;
       btnReset.style.visibility  = hide;
       presetRow.style.visibility = hide;
+      if (isRunning) document.getElementById('custom-row').style.display = 'none';
       const ad = document.getElementById('ad-banner');
       if (ad) ad.style.display = isRunning ? 'none' : 'flex';
     }
@@ -242,6 +249,10 @@
       document.body.style.backgroundColor = bg;
       ringTrack.style.stroke = bg;
       ring.style.stroke = darken(bg, 30);
+
+      const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+      const s = (remaining % 60).toString().padStart(2, '0');
+      document.getElementById('ring-timer').textContent = `${m}:${s}`;
     }
 
     function setTime(seconds) {
@@ -255,8 +266,25 @@
     function setPreset(s, btn) {
       document.querySelectorAll('#preset-row button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      document.getElementById('custom-row').style.display = 'none';
       setTime(s);
     }
+
+    function toggleCustom(btn) {
+      document.querySelectorAll('#preset-row button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const row = document.getElementById('custom-row');
+      row.style.display = 'flex';
+      document.getElementById('custom-input').focus();
+    }
+
+    function applyCustom() {
+      const mins = parseInt(document.getElementById('custom-input').value);
+      if (!mins || mins < 1) return;
+      setTime(mins * 60);
+    }
+
+    document.getElementById('custom-input').addEventListener('input', applyCustom);
 
     function start() {
       if (remaining <= 0) return;
